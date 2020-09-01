@@ -26,7 +26,7 @@ DNA methylation is an epigenetic modification that modulates chromatin structure
 * To obatin the true 5hmc level in geneomic DNA we do subtraction of BS-seq and oxBS-seq.
   BS seq - oxBS seq = 5hmc (true 5hmc)
 
-![booth_et_al](https://github.com/Adnanhashim/BS_OxBS/blob/master/Booth_et_al_science.png)
+![booth_et_al](https://github.com/Adnanhashim/BS_OxBS/blob/master/booth_et_al_science_crop.png)
                                                                (Booth et al. 2012, Science)
 
 
