@@ -43,6 +43,7 @@ FastQC (https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) aims to prov
 fastqc *.fastq -o 1_fastQC
 ```
 
-### Removal of Adapter sequences: 
+### Quality control: cegx-bsExpress
+cegx_bsExpress (https://github.com/cegx-ds/cegx_bsExpress) is a tool for quality control of BS-seq and oxBS-seq sequeincing libraries. In oxBS-seq spike-in oligonucleotides controls (SQ1hmc, Sq3hmC and SQ6hmc) where amounts of cytosine modificaton are known are used to access the successful BS and oxBS experiments.
 
 ### Methylation Anlaysis (5mc):
