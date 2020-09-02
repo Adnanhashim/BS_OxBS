@@ -43,7 +43,28 @@ FastQC (https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) aims to prov
 fastqc *.fastq -o 1_fastQC
 ```
 
-### Quality control: cegx-bsExpress
-cegx_bsExpress (https://github.com/cegx-ds/cegx_bsExpress) is a tool for quality control of BS-seq and oxBS-seq sequeincing libraries. In oxBS-seq spike-in oligonucleotides controls (SQ1hmc, Sq3hmC and SQ6hmc) where amounts of cytosine modificaton are known are used to access the successful BS and oxBS experiments.
+### Quality control: cegx-bsExpress (spike-in oligonucleotides controls)
+cegx_bsExpress (https://github.com/cegx-ds/cegx_bsExpress) is a tool for quality control of BS-seq and oxBS-seq sequeincing libraries. Spike-in oligonucleotides controls (SQ1hmc, Sq3hmC and SQ6hmc) where amounts of cytosine modificaton are known are used in BS-Seq and oxBS-Seq to access the successful BS and oxBS experiments. cegx_bsExpress can used for BS-seq and oxBS-seq data analysis from raw (fastq files) to genome-wide methylation call but I am using cegx-bsExpress just for the analysis of spike-in oligonuclotide controls. 
 
-### Methylation Anlaysis (5mc):
+```bash
+mkdir 1_bsExpress
+nohup sh -c 'for fq1 in *R1_001.fastq.gz; do
+fq2=${fq1/_R1_/_R2_}
+out=`basename $fq1 _R1_001.fastq.gz`
+#out1=${out}_R1.fq.gz
+#out2=${out}_R2.fq.gz
+#echo $fq1, $fq2, $out, $out1, $out2
+
+if [[ ! -f "$fq1" ]]; then echo "WRONG"; break; fi
+if [[ ! -f "$fq2" ]]; then echo "WRONG"; break; fi
+
+echo -e "Ruuning Pre­alignment CEGX tailed Sequencing Controls: cegx_bsExpress" 
+mkdir 1_bsExpress/$out/
+bsExpress -i $fq1 $fq2 -r /lsc/common/Adnantools/bsExpress-0.4.1b/control_reference/oxBS_controls-v1.0.fa -p runqc --outdir 1_bsExpress/$out/
+done' > nohup_1_bsExpress_spikein_alignment.txt
+
+```
+cegx_bsExpress generates follwoing outputs 
+*.coverage.pdf (Histogram of the read coverage C to T at each known cytosine modfication in spike-in oligonucleotides control sequences)  
+*.conversion.pdf (Histogram of the percentage of unconverted C to T at each known cytosine modfication in spike-in oligonucleotides control sequences)
+*.oxqc_summary.txt (conversion information of C to T) 
