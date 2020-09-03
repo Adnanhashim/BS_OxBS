@@ -60,8 +60,9 @@ if [[ ! -f "$fq2" ]]; then echo "WRONG"; break; fi
 
 echo -e "Ruuning Pre­alignment CEGX tailed Sequencing Controls: cegx_bsExpress" 
 mkdir 1_bsExpress/$out/
-bsExpress -i $fq1 $fq2 -r /lsc/common/Adnantools/bsExpress-0.4.1b/control_reference/oxBS_controls-v1.0.fa -p runqc --outdir 1_bsExpress/$out/
-done' > nohup_1_bsExpress_spikein_alignment.txt
+oxBS_controls=/lsc/common/Adnantools/bsExpress-0.4.1b/control_reference/oxBS_controls-v1.0.fa 
+bsExpress -i $fq1 $fq2 -r $oxBS_controls -p runqc --outdir 1_bsExpress/$out/
+done' > 1_bsExpress/nohup_1_bsExpress_spikein_alignment.txt
 
 ```
 cegx_bsExpress generates follwoing outputs 
