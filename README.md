@@ -76,6 +76,7 @@ Example of Wildtype (WT) quantitative assesment of 5mc and 5hmc percentages per 
 
   
 * WT BS summary: 
+
 Spike-in | Conversion | Percentage of conversion | Converted reads | Total reads 
 -------- | -----------| ------------------------ |  -------------- | -----------
 SQ1hmC | 5hmC | 96.61 | 114 | 118
@@ -95,7 +96,8 @@ all	| 5mC |	92.63 |	16643 | 17968
 all	| C | 0.19 | 125 | 65893  
 
 
-* WT oxBS summary: 
+* WT oxBS summary:
+ 
 Spike-in | Conversion | Percentage of conversion | Converted reads | Total reads 
 -------- | -----------| ------------------------ |  -------------- | -----------
 SQ1hmC | 5hmC |	3.33 | 2 | 60
