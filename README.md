@@ -140,4 +140,28 @@ Example of Wildtype (WT) before and after adapter trimming.
 ### Alignment: bismark 
 Bismark (https://github.com/FelixKrueger/Bismark) was used to align bisulfite and oxidative bisulfite treated sequencing reads to the human genome (hg38).
 
+```bash
+
+mkdir 2_bismark_alignment
+nohup sh -c 'for fq1 in *_R1_001_trim.fastq.gz; do
+fq2=${fq1/_R1_/_R2_}
+out=`basename $fq1 _R1_001_trim.fastq.gz`
+#echo $fq1, $fq2, $out
+
+if [[ ! -f "$fq1" ]]; then echo "WRONG"; break; fi
+if [[ ! -f "$fq2" ]]; then echo "WRONG"; break; fi
+
+echo -e "Alignment: Paired­End alignment of reads to a reference genome"
+mkdir 2_bismark_alignment/$out/
+
+bismark --multicore 12 --bowtie2 --genome_folder /lsc/common/Adnantools/bismark_indexed_genome_hg38_bowtie2 -1 $fq1 -2 $fq2 --output_dir 2_bismark_alignment/$out/ --temp_dir /storage/scratch/Adnan/tmp_dir_bismark &&
+
+#sam to sorted BAM
+samtools view -bS 2_bismark_alignment/$out/${out}.sam | samtools sort -@ 16 - -o  2_bismark_alignment/$out/${out}_sorted.bam 
+
+#index of BAM 
+samtools index 2_bismark_alignment/$out/${out}_sorted.bam 2_bismark_alignment/$out/${out}_sorted.bam.bai
+rm 2_bismark_alignment/$out/${out}.sam; done' > nohup_1_bsExpress_bismark_alignment.txt
+```
+
 
