@@ -76,23 +76,23 @@ Example of Wildtype (WT) quantitative assesment of 5mc and 5hmc percentages per 
 
   
 WT BS summary: 
-Sample | Spike-in| Conversion | Percentage of conversion | Converted reads | Total reads 
--------| --------| -----------| ------------------------ |  -------------- | -----------
+Spike-in| Conversion | Percentage of conversion | Converted reads | Total reads 
+--------| -----------| ------------------------ |  -------------- | -----------
 SQ1hmC | 5hmC | 96.61 | 114 | 118
 SQ1hmC | 5mC | 91.42 | 4019 | 4396
-SQ1hmC	C	0.33	10	3053
-SQ3hmC	5hmC	97.25	1060	1090
-SQ3hmC	5mC	94.21	3790	4023
-SQ3hmC	C	0.42	17	4087
-SQ6hmC	5hmC	96.31	1226	1273
-SQ6hmC	5mC	68.6	830	1210
-SQ6hmC	C	0.47	6	1266
-SQC	5mC	96.59	6831	7072
-SQC	C	0.16	92	57487
-SQmC	5mC	92.58	1173	1267
-all	5hmC	96.74	2400	2481
-all	5mC	92.63	16643	17968
-all	C	0.19	125	65893  
+SQ1hmC |	C | 0.33 | 10 | 3053
+SQ3hmC |	5hmC | 97.25 | 1060 | 1090
+SQ3hmC |	5mC | 94.21 |	3790 | 4023
+SQ3hmC |	C | 0.42 |	17 | 4087
+SQ6hmC |	5hmC |	96.31 |	1226 | 1273
+SQ6hmC |	5mC |	68.6 |	830 | 1210
+SQ6hmC |	C |	0.47 |	6 | 1266
+SQC |	5mC |	96.59 |	6831 | 7072
+SQC |	C |	0.16 |	92 | 57487
+SQmC | 5mC | 92.58 |	1173 | 1267
+all |	5hmC |96.74 |	2400 | 2481
+all	| 5mC |	92.63 |	16643 | 17968
+all	| C | 0.19 | 125 | 65893  
   
   Sample |Spike-in| Conversion | Percentage of conversion | Converted reads	| Total reads
   
