@@ -116,5 +116,27 @@ all |	5hmC |	4.02 |	42 |	1046
 all |	5mC |	93.2 |	5302 |	5689
 all |	C |	0.13 |	31 |	24170
 
+
+### Adapter trimming
+
+TrimGlore (https://github.com/FelixKrueger/TrimGalore) was used to trim adapter sequences. 
+
+```bash
+nohup sh -c 'for fq1 in *R1.fq.gz; do
+fq2=${fq1/R1/R2}
+out=`basename $fq1 _R1.fq.gz`
+mkdir ./2_adapter_trim
+echo $fq1, $fq2, $out
+ 
+if [[ ! -f "$fq1" ]]; then echo "WRONG"; break; fi
+if [[ ! -f "$fq2" ]]; then echo "WRONG"; break; fi
+
+trim_galore --paired --illumina $fq1 $fq2 -o ./2_adapter_trim ;done' > ./2_adapter_trim/nohup_trim_glore.txt
+```
+
+
   
 ### Alignment: bismark 
+Bismark (https://github.com/FelixKrueger/Bismark) was used to align bisulfite and oxidative bisulfite treated sequencing reads to the human genome (hg38).
+
+
