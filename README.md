@@ -66,9 +66,9 @@ done' > 1_bsExpress/nohup_1_bsExpress_spikein_alignment.txt
 
 ```
 cegx_bsExpress generates follwoing outputs 
-*.coverage.pdf (Histogram of the read coverage C to T at each known cytosine modfication in spike-in oligonucleotides control sequences)  
-*.conversion.pdf (Histogram of the percentage of unconverted C to T at each known cytosine modfication in spike-in oligonucleotides control sequences)
-*.oxqc_summary.txt (conversion information of C to T) 
+* *.coverage.pdf (Histogram of the read coverage C to T at each known cytosine modfication in spike-in oligonucleotides control sequences)  
+* *.conversion.pdf (Histogram of the percentage of unconverted C to T at each known cytosine modfication in spike-in oligonucleotides control sequences)
+* *.oxqc_summary.txt (conversion information of C to T) 
 
 
 
