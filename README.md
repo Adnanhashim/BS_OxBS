@@ -72,4 +72,4 @@ cegx_bsExpress generates follwoing outputs
 
 
 Example of Wildtype (WT) quantitative assesment of 5mc and 5hmc percentages per base call in spike-in oliginucleotide controls (SQ1hmc, SQ3hmc and SQ6hmc) 
-![WT_spikein_controls]
+![WT_spikein_controls](https://github.com/Adnanhashim/BS_OxBS/blob/master/spike-in_control.png)
