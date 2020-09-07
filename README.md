@@ -164,4 +164,11 @@ samtools index 2_bismark_alignment/$out/${out}_sorted.bam 2_bismark_alignment/$o
 rm 2_bismark_alignment/$out/${out}.sam; done' > nohup_1_bsExpress_bismark_alignment.txt
 ```
 
+### Merge replicates:
+
+Replicates were merged for further analysis. 
+
+```bash
+samtools merge  -@ 32 -O BAM *merged.bam *.Rep1.bam *.Rep2.bam
+```
 
