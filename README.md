@@ -164,7 +164,7 @@ samtools index 2_bismark_alignment/$out/${out}_sorted.bam 2_bismark_alignment/$o
 rm 2_bismark_alignment/$out/${out}.sam; done' > nohup_1_bsExpress_bismark_alignment.txt
 ```
 
-### Merge replicates:
+### Merge replicates & remove duplicates:
 
 Replicates were merged for further analysis. 
 
@@ -172,3 +172,210 @@ Replicates were merged for further analysis.
 samtools merge  -@ 32 -O BAM *merged.bam *.Rep1.bam *.Rep2.bam
 ```
 
+
+### Methylation call
+
+```R
+setwd("./")
+
+#load libraries
+
+library(methylKit)
+library(genomation)
+library(GenomicRanges)
+library("EnrichedHeatmap")
+library(ggplot2)
+library("GenomicFeatures")
+library("TxDb.Hsapiens.UCSC.hg38.knownGene")
+library(cluster) # diana
+library(circlize) # colorRamp2
+library(reshape2)
+library(rtracklayer)
+
+# Methylation call at CpGs
+processBismarkAln(location=list("WT_bs_1-WT-bs-r1_S11_5-WT-bs-r2_S15_sorted.bam","WT_oxbs_2-WT-oxbs-r1_S12_6-WT-oxbs-r2_S16_sorted.bam","B_KO_bs_3-B-bs-r1_S13_7-B-bs-r2_S17_sorted.bam","B_KO_oxbs_4-B-oxbs-r1_S14_8-B-oxbs-r2_S10_sorted.bam"),sample.id= list("WT_bs","WT_oxbs","B_KO_bs","4B_KO_oxbs" ), assembly="hg38",save.folder = "methyl_call/", save.context = c("CpG"), read.context = "CpG",nolap = TRUE, mincov = 10, minqual = 20, phred64 = FALSE,treatment=c(1,1,0,0), save.db = TRUE)
+
+more WT_oxbs_CpG.txt | egrep -iv "chrY|chrUn*|*random" > WT_oxbs_CpG_mod.txt 
+more BKO_oxbs_CpG.txt | egrep -iv "chrY|chrUn*|*random" > BKO_oxbs_CpG_mod.txt
+
+# First of need to convert adjusted 5hmc into the methRead format
+more Bko_adjusted_true_5hmC.txt | sed 's/\"//g' | grep -v ^chr| cut -f2,3,5-8|sed 's/\t/\./' |sed 's/\+/F/'|sed 's/\-/R/' |awk -v OFS="\t" '{print $1,$1,$2,$3,100*($4/$3),100*($5/$3)}'| sed 's/\./\t/2' > Bko_adjusted_true_5hmC_tmp.txt
+more WT_adjusted_true_5hmC.txt | sed 's/\"//g' | grep -v ^chr| cut -f2,3,5-8|sed 's/\t/\./' |sed 's/\+/F/'|sed 's/\-/R/' |awk -v OFS="\t" '{print $1,$1,$2,$3,100*($4/$3),100*($5/$3)}'| sed 's/\./\t/2' > WT_adjusted_true_5hmC_tmp.txt
+
+echo -e "chrBase\tchr\tbase\tstrand\tcoverage\tfreqC\tfreqT" | cat - WT_adjusted_true_5hmC_tmp.txt > WT_adjusted_true_5hmC_methylkit_input_final.txt 
+echo -e "chrBase\tchr\tbase\tstrand\tcoverage\tfreqC\tfreqT" | cat - Bko_adjusted_true_5hmC_tmp.txt > Bko_adjusted_true_5hmC_methylkit_input_final.txt
+
+#True 5mc
+
+dir.create("./CpG")
+cpg.files=list("../CpG/5mc/WT_oxbs_CpG_mod.txt","../CpG/5mc/BKO_oxbs_CpG_mod.txt")
+mobj.cpg =methRead(cpg.files,sample.id=list("WT","BKO"),assembly="hg38",treatment=c(0,1),context="CpG") #CpG methylation call
+
+filt.mobj.cpg = filterByCoverage(mobj.cpg, lo.count=10, hi.perc=99.9)
+save(mobj.cpg, filt.mobj.cpg, file="methylRawList.RData")
+#load("methylRawList.RData")
+
+sink("CpG/methylKit.cpg.statistics.txt")
+     for (i in c(1:length(mobj.cpg))){
+          sample.id = mobj.cpg[[i]]@sample.id
+          pPass = nrow(filt.mobj.cpg[[i]])/nrow(mobj.cpg[[i]])
+          print(paste(sample.id, ":", sprintf("%.2f",pPass*100),"%"))
+          getMethylationStats(filt.mobj.cpg[[i]], plot=F, both.strands=F) # % methylation distribution
+          png(paste0("CpG/",sample.id,".cpg.methylation.png"),height=3000,width=3000,res=300) 
+          getMethylationStats(filt.mobj.cpg[[i]], plot=T, both.strands=F) # Plot
+          dev.off()
+          getCoverageStats(filt.mobj.cpg[[i]], plot=F, both.strands=F)
+          png(paste0("CpG/",sample.id,".cpg.ori-coverage.png"),height=3000,width=3000,res=300)
+          getCoverageStats(mobj.cpg[[i]], plot=T, both.strands=F)
+          dev.off()
+          png(paste0("CpG/",sample.id,".cpg.coverage.png"),height=3000,width=3000,res=300)
+          getCoverageStats(filt.mobj.cpg[[i]], plot=T, both.strands=F)
+          dev.off()
+    }
+sink()
+
+#Differential methylation (hypo_hyper) CpG sites/bases
+meth.cpg = unite(filt.mobj.cpg) #common sites
+write.table(meth.cpg,"CpG/WT_VS_BKO_filtered_unite_CPG.txt",sep="\t")  #WT_VS_BKO
+mDiff.cpg = calculateDiffMeth(meth.cpg)
+write.table(meth.cpg,"CpG/output_WT_VS_BKO_Diff_all_CPG.txt",sep="\t")  #WT_VS_BKO
+mDiff25p.hyper.cpg = getMethylDiff(mDiff.cpg, difference=25, qvalue=0.01, type="hyper")
+mDiff25p.hypo.cpg = getMethylDiff(mDiff.cpg, difference=25, qvalue=0.01, type="hypo")
+
+write.table(mDiff25p.hyper.cpg,"CpG/output_WT_VS_BKO_Diff_hyper_CPG.txt",sep="\t")  #WT_VS_BKO
+write.table(mDiff25p.hypo.cpg,"CpG/output_WT_VS_BKO_Diff_hypo_CPG.txt",sep="\t")
+
+mDiff25p.hyper.chg = getMethylDiff(mDiff.chg, difference=25, qvalue=0.01, type="hyper")
+mDiff25p.hypo.chg = getMethylDiff(mDiff.chg, difference=25, qvalue=0.01, type="hypo")
+
+write.table(mDiff25p.hyper.chg,"CHG/output_WT_VS_BKO_Diff_hyper_CHG.txt",sep="\t")  #WT_VS_BKO
+write.table(mDiff25p.hypo.chg,"CHG/output_WT_VS_BKO_Diff_hypo_CHG.txt",sep="\t")
+
+mDiff25p.hyper.chh = getMethylDiff(mDiff.chh, difference=25, qvalue=0.01, type="hyper")
+mDiff25p.hypo.chh = getMethylDiff(mDiff.chh, difference=25, qvalue=0.01, type="hypo")
+
+write.table(mDiff25p.hyper.chh,"CHH/output_WT_VS_BKO_Diff_hyper_CHH.txt",sep="\t")  #WT_VS_BKO
+write.table(mDiff25p.hypo.chh,"CHH/output_WT_VS_BKO_Diff_hypo_CHH.txt",sep="\t")
+
+mDiff25p.cpg = getMethylDiff(mDiff.cpg, difference=25, qvalue=0.01)
+mDiff25p.chg = getMethylDiff(mDiff.chg, difference=25, qvalue=0.01)
+mDiff25p.chh = getMethylDiff(mDiff.chh, difference=25, qvalue=0.01)
+
+write.table(mDiff25p.cpg,"CpG/output_WT_VS_BKO_Diff_significant_CPG.txt",sep="\t")  #WT_VS_BKO
+write.table(mDiff25p.chg,"CHG/output_WT_VS_BKO_Diff_significant_CHG.txt",sep="\t")
+write.table(mDiff25p.chh,"CHH/output_WT_VS_BKO_Diff_significant_CHH.txt",sep="\t")
+  
+
+sink("CpG/methylKit.DMperChr.cpg.txt")
+diffMethPerChr(mDiff.cpg, meth.cutoff=25, qvalue.cutoff=0.01, plot=FALSE)
+sink()
+png("CpG/methylKit.DMperChr.cpg.png",height=3000,width=3000,res=300) 
+diffMethPerChr(mDiff.cpg, meth.cutoff=25, qvalue.cutoff=0.01, plot=TRUE)
+legend("topright", title="CpG", legend=c("hyper","hypo"), fill=c("magenta","aquamarine4"))
+dev.off()
+
+gene.obj=readTranscriptFeatures("../hg38_RefSeq.bed")
+
+annotateWithGeneParts(as(mDiff25p.cpg,"GRanges"),gene.obj)
+annotateWithGeneParts(as(mDiff25p.hyper.cpg,"GRanges"),gene.obj)
+annotateWithGeneParts(as(mDiff25p.hypo.cpg,"GRanges"),gene.obj)
+
+diffAnn.hypo.cpg=annotateWithGeneParts(as(mDiff25p.hypo.cpg,"GRanges"),gene.obj)
+diffAnn.hyper.cpg=annotateWithGeneParts(as(mDiff25p.hyper.cpg,"GRanges"),gene.obj)
+write.table(getAssociationWithTSS(diffAnn.hypo.cpg),"CpG/diffAnn_hypo_CpG_associtaion_within_TSS.txt",sep="\t")
+write.table(getAssociationWithTSS(diffAnn.hyper.cpg),"CpG/diffAnn_hyper_CpG_associtaion_within_TSS.txt",sep="\t")
+
+getTargetAnnotationStats(diffAnn.hypo.cpg,percentage=TRUE,precedence=TRUE)
+getTargetAnnotationStats(diffAnn.hyper.cpg,percentage=TRUE,precedence=TRUE)
+
+png("CpG/DE_hypo_CpG_methylation_annotation_genelevel.png", height = 3000, width = 4800, res = 300)
+plotTargetAnnotation(diffAnn.hypo.cpg,precedence=TRUE,main="differential hypo methylation annotation")
+dev.off()
+
+png("CpG/DE_hyper_methylation_annotation_genelevel.png", height = 3000, width = 4800, res = 300)
+plotTargetAnnotation(diffAnn.hyper.cpg,precedence=TRUE,main="differential hyper methylation annotation")
+dev.off()
+
+###################  Differential methylation (hypo_hyper) regions
+
+		###################  CPG
+
+tiles.cpg=tileMethylCounts(meth.cpg,win.size=1000,step.size=1000)
+write.table(tiles.cpg,"CpG/WT_VS_BKO_filtered_unite_regions_1000.txt",sep="\t")
+
+tileDiff.cpg = calculateDiffMeth(tiles.cpg)
+write.table(tileDiff.cpg,"CpG/output_WT_VS_BKO_all_Regions_CPG.txt",sep="\t")
+tileDiff25p.cpg = getMethylDiff(tileDiff.cpg, difference=25,qvalue=0.01)
+tileDiff25p.cpg.hyper = getMethylDiff(tileDiff.cpg, difference=25,qvalue=0.01,type="hyper")
+tileDiff25p.cpg.hypo = getMethylDiff(tileDiff.cpg, difference=25,qvalue=0.01,type="hypo")
+write.table(tileDiff25p.cpg,"CpG/output_WT_VS_BKO_significant_Regions_CPG.txt",sep="\t")
+write.table(tileDiff25p.cpg.hyper,"CpG/output_WT_VS_BKO_significan_hyper_Regions_CPG.txt",sep="\t")
+write.table(tileDiff25p.cpg.hypo,"CpG/output_WT_VS_BKO_significan_hypo_Regions_CPG.txt",sep="\t")
+
+png("CpG/percentage_DE_hyper_and_hypo_methylated_regions_per_chr_CPG.png", height = 3000, width = 4800, res = 300)
+diffMethPerChr(tileDiff.cpg, meth.cutoff=25, qvalue.cutoff=0.01, plot=TRUE)
+legend("topright", title="CpG", legend=c("hyper","hypo"),fill=c("magenta","aquamarine4"))
+dev.off()
+
+################### Annoation_gene_level	
+	
+	###################  Average plot
+
+txdb = TxDb.Hsapiens.UCSC.hg38.knownGene
+transcripts.GR = transcripts(txdb)
+elementMetadata(transcripts.GR) = data.frame(name = elementMetadata(transcripts.GR)[,2], stringsAsFactors=FALSE)
+
+promoters.GR = promoters(txdb, upstream=1000, downstream=1000)
+elementMetadata(promoters.GR) = data.frame(name = elementMetadata(promoters.GR)[,2], stringsAsFactors=FALSE)
+tss.GR = promoters(txdb, upstream=0, downstream=1)
+elementMetadata(tss.GR) = data.frame(name = elementMetadata (tss.GR)[,2], stringsAsFactors=FALSE)
+exons.GR = unlist(exonsBy(txdb, "tx", use.names=TRUE))
+
+elementMetadata(exons.GR) = data.frame(name = names(exons.GR), stringsAsFactors=FALSE)
+names(exons.GR) = NULL
+introns.GR = unlist(intronsByTranscript(txdb, use.names=TRUE))
+
+elementMetadata(introns.GR) = data.frame(name = names(introns.GR), stringsAsFactors=FALSE)
+names(introns.GR) = NULL
+gene.obj_1 = GRangesList("exons" = exons.GR, "introns" = introns.GR, "promoters" = promoters.GR, "TSSes" = tss.GR, "transcripts" = transcripts.GR)
+#gene.obj_1
+
+		###################  CPG
+perc.meth.cpg = percMethylation(meth.cpg)
+write.table(perc.meth.cpg,"CpG/percentage_cpg.txt",sep="\t")
+ 
+GR_unite_mc.cpg = granges(as(meth.cpg, "GRanges"))
+GR_unite_WT.cpg = granges(as(meth.cpg, "GRanges"))
+GR_unite_BKO.cpg = granges(as(meth.cpg, "GRanges"))
+elementMetadata(GR_unite_WT.cpg)$meth.cpg = perc.meth.cpg[,1]
+elementMetadata(GR_unite_BKO.cpg)$meth.cpg = perc.meth.cpg[,2]
+
+extend = 5000
+
+TSS_GR_unite_WT.cpg = normalizeToMatrix(GR_unite_WT.cpg, gene.obj$TSSes, value_column = "meth.cpg", mean_mode = "absolute", extend = extend, empty_value = NA)
+TSS_GR_unite_BKO.cpg = normalizeToMatrix(GR_unite_BKO.cpg, gene.obj$TSSes, value_column = "meth.cpg", mean_mode = "absolute", extend = extend, empty_value = NA)
+
+mean_TSS_GR_unite_WT.cpg=colMeans(TSS_GR_unite_WT.cpg, na.rm = TRUE)
+mean_TSS_GR_unite_BKO.cpg=colMeans(TSS_GR_unite_BKO.cpg, na.rm = TRUE)
+dfTSS.cpg = data.frame(Sample = c("WT"," KO"))
+
+
+dfTSS.cpg[,names(mean_TSS_GR_unite_WT.cpg)] <- rbind(mean_TSS_GR_unite_WT.cpg, mean_TSS_GR_unite_BKO.cpg)
+dfTSS.cpg = melt(dfTSS.cpg, id = c("Sample"))
+write.table(dfTSS.cpg,"CpG/TSS_average_plot_CPG.txt",sep="\t")
+png("CpG/Averageplot_TSS_CpG_methylation_CPG.png",height = 3000, width = 4800, res = 300)
+ggplot(dfTSS.cpg, aes(variable, value, group = Sample))+ geom_line(aes(color = Sample), size = 0.6) + theme_light() + geom_line(aes(color = Sample), size = 0.6) + theme_light() + scale_x_discrete(breaks = c("u1","d50"), labels=c("-5000","+5000")) + theme(legend.position="right", axis.title.x = element_text(face = "bold", size = 16), axis.title.y = element_text(face = "bold", size = 16),axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 14),panel.grid.minor = element_blank(), plot.title = element_text(face = "bold", size = 18)) + labs(title = "Average CpG methylation at promoter region", x ="TSS", y = "% methylation") + annotate("rect", xmin = 50, xmax = 51, ymin = 0, ymax = max(dfTSS.cpg$value)+0.25, alpha = .2)
+dev.off()
+
+Tx_WT_cpg = normalizeToMatrix(GR_unite_WT.cpg, gene.obj_1$transcripts, value_column = "meth.cpg", mean_mode = "absolute", extend = extend, empty_value = NA, target_ratio = 0.4)
+Tx_BKO_cpg = normalizeToMatrix(GR_unite_BKO.cpg, gene.obj_1$transcripts, value_column = "meth.cpg", mean_mode = "absolute", extend = extend, empty_value = NA, target_ratio = 0.4)
+
+mean_Tx_WT_cpg=colMeans(Tx_WT_cpg, na.rm = TRUE)
+mean_Tx_BKO_cpg=colMeans(Tx_BKO_cpg, na.rm = TRUE)
+dfTx.cpg = data.frame(Sample = c("WT"," BKO"))
+dfTx.cpg[,names(mean_Tx_WT_cpg)] <- rbind(mean_Tx_WT_cpg, mean_Tx_BKO_cpg)
+dfTx.cpg = melt(dfTx.cpg, id = c("Sample"))
+write.table(dfTx.cpg,"CpG/Transcribed_regions_average_plot_CPG.txt",sep="\t")
+png("CpG/Averageplot_transcribed_region_CpG_methylation.png",height = 3000, width = 4800, res = 300)
+ggplot(dfTx.cpg, aes(variable, value, group = Sample)) +geom_line(aes(color = Sample), size = 0.6) + theme_light() + scale_x_discrete(breaks = c("u1","d50"), labels= c("-5000","+5000")) + theme(legend.position="right",axis.title.x = element_text(face = "bold", size = 16),axis.title.y = element_text(face = "bold", size = 16),axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 14),panel.grid.minor = element_blank(),plot.title = element_text(face = "bold", size = 18)) + labs(title = "Average CpG methylation at transcribed region ",x = "Transcribed Region", y = "% methylation") + annotate("rect", xmin = 51, xmax = 117, ymin = 0, ymax = max(dfTx.cpg$value)+0.25, alpha = .2)
+dev.off()
