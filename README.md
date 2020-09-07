@@ -73,3 +73,26 @@ cegx_bsExpress generates follwoing outputs
 
 Example of Wildtype (WT) quantitative assesment of 5mc and 5hmc percentages per base call in spike-in oliginucleotide controls (SQ1hmc, SQ3hmc and SQ6hmc) 
 ![WT_spikein_controls](https://github.com/Adnanhashim/BS_OxBS/blob/master/spike-in_control.png)
+
+
+Sample	Spike-in 	Conversion 	Percentage of conversion	Converted reads	Total reads	Sample	Spike-in 	Conversion 	Percentage of conversion	Converted reads	Total reads
+WT_BS_rep1	SQ1hmC	5hmC	96.61	114	118	WT_oxBS_rep1	SQ1hmC	5hmC	3.33	2	60
+	SQ1hmC	5mC	91.42	4019	4396		SQ1hmC	5mC	89.89	818	910
+	SQ1hmC	C	0.33	10	3053		SQ1hmC	C	0	0	674
+	SQ3hmC	5hmC	97.25	1060	1090		SQ3hmC	5hmC	4.38	12	274
+	SQ3hmC	5mC	94.21	3790	4023		SQ3hmC	5mC	92.34	651	705
+	SQ3hmC	C	0.42	17	4087		SQ3hmC	C	0	0	658
+	SQ6hmC	5hmC	96.31	1226	1273		SQ6hmC	5hmC	3.93	28	712
+	SQ6hmC	5mC	68.6	830	1210		SQ6hmC	5mC	90.32	541	599
+	SQ6hmC	C	0.47	6	1266		SQ6hmC	C	0.37	2	535
+	SQC	5mC	96.59	6831	7072		SQC	5mC	95.91	2605	2716
+	SQC	C	0.16	92	57487		SQC	C	0.13	29	22303
+	SQmC	5mC	92.58	1173	1267		SQmC	5mC	90.51	687	759
+	all	5hmC	96.74	2400	2481		all	5hmC	4.02	42	1046
+	all	5mC	92.63	16643	17968		all	5mC	93.2	5302	5689
+	all	C	0.19	125	65893		all	C	0.13	31	24170
+  
+  Sample | Spike-in| Conversion | Percentage of conversion | Converted reads | Total reads | Sample |Spike-in| Conversion | Percentage of conversion | Converted reads	| Total reads
+  -------| --------| -----------| ------------------------ |  -------------- | ----------- |  -------| --------| -----------| ------------------------ |  -------------- | -----------
+  
+### Alignment: bismark 
