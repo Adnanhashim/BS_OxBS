@@ -133,7 +133,8 @@ if [[ ! -f "$fq2" ]]; then echo "WRONG"; break; fi
 
 trim_galore --paired --illumina $fq1 $fq2 -o ./2_adapter_trim ;done' > ./2_adapter_trim/nohup_trim_glore.txt
 ```
-
+Example of Wildtype (WT) before and after adapter trimming.
+![WT_TrimGlore](https://github.com/Adnanhashim/BS_OxBS/blob/master/trimglore.png)
 
   
 ### Alignment: bismark 
