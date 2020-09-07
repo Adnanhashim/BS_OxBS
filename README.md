@@ -71,4 +71,5 @@ cegx_bsExpress generates follwoing outputs
 * *.oxqc_summary.txt (conversion information of C to T) 
 
 
-
+Example of Wildtype (WT) quantitative assesment of 5mc and 5hmc percentages per base call in spike-in oliginucleotide controls (SQ1hmc, SQ3hmc and SQ6hmc) 
+![WT_spikein_controls]
