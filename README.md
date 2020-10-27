@@ -320,13 +320,12 @@ dev.off()
 ##Annotation of DMR
 gene.obj=readTranscriptFeatures("../hg38_RefSeq.bed")
 cpg.obj=readFeatureFlank("../cpgi.hg38.bed",feature.flank.name=c("CpGi","shores"))
+annotateWithGeneParts(as(tileDiff25p.cpg,"GRanges"),gene.obj)
+annotateWithGeneParts(as(tileDiff25p.cpg.hyper,"GRanges"),gene.obj)
+annotateWithGeneParts(as(tileDiff25p.cpg.hypo,"GRanges"),gene.obj)
 
-annotateWithGeneParts(as(tileDiff5p.cpg,"GRanges"),gene.obj)
-annotateWithGeneParts(as(tileDiff5p.cpg.hyper,"GRanges"),gene.obj)
-annotateWithGeneParts(as(tileDiff5p.cpg.hypo,"GRanges"),gene.obj)
-
-diffAnn.hypo.cpg.tile=annotateWithGeneParts(as(tileDiff5p.cpg.hypo,"GRanges"),gene.obj)
-diffAnn.hyper.cpg.tile=annotateWithGeneParts(as(tileDiff5p.cpg.hyper,"GRanges"),gene.obj)
+diffAnn.hypo.cpg.tile=annotateWithGeneParts(as(tileDiff25p.cpg.hypo,"GRanges"),gene.obj)
+diffAnn.hyper.cpg.tile=annotateWithGeneParts(as(tileDiff25p.cpg.hyper,"GRanges"),gene.obj)
 write.table(getAssociationWithTSS(diffAnn.hypo.cpg.tile),"CpG/DMR/diffAnn_hypo_CpG_associtaion_within_TSS.txt",sep="\t")
 write.table(getAssociationWithTSS(diffAnn.hyper.cpg.tile),"CpG/DMR/diffAnn_hyper_CpG_associtaion_within_TSS.txt",sep="\t")
 
@@ -334,23 +333,13 @@ getTargetAnnotationStats(diffAnn.hypo.cpg.tile,percentage=TRUE,precedence=TRUE)
 getTargetAnnotationStats(diffAnn.hyper.cpg.tile,percentage=TRUE,precedence=TRUE)
 
 png("CpG/DMR/DE_hypo_CpG_methylation_annotation_genelevel.png", height = 3000, width = 4800, pointsize = 12,res = 300)
-plotTargetAnnotation(diffAnn.hypo.cpg.tile,precedence=TRUE,main="Hyper-DMR Gene annotation")
+plotTargetAnnotation(diffAnn.hypo.cpg.tile,precedence=TRUE,main="Hypo-DMR Gene annotation")
 dev.off()
 
 png("CpG/DMR/DE_hyper_methylation_annotation_genelevel.png", height = 3000, width = 4800,pointsize = 12, res = 300)
 plotTargetAnnotation(diffAnn.hyper.cpg.tile,precedence=TRUE,main="Hyper-DMR Gene annotation")
 dev.off()
 
-diffCpGann.hypo.cpg.tile=annotateWithFeatureFlank(as(tileDiff5p.cpg.hypo,"GRanges"),cpg.obj$CpGi,cpg.obj$shores,feature.name="CpGi",flank.name="shores")
-diffCpGann.hyper.cpg.tile=annotateWithFeatureFlank(as(tileDiff5p.cpg.hyper,"GRanges"),cpg.obj$CpGi,cpg.obj$shores,feature.name="CpGi",flank.name="shores")
-
-png("CpG/DMR/DE_hypo_regions_CPG_methylation_annotation_CpGi_shores_otherRegions.png", height = 3000, width = 4800,pointsize = 12, res = 300)
-plotTargetAnnotation(diffCpGann.hypo.cpg.tile,col=c("green","gray","white"),main="Hypo-DMR CpGi/shores annotation")
-dev.off()
-
-png("CpG/DMR/DE_hyper_regions_CPG_methylation_annotation_CpGi_shores_otherRegions.png", height = 3000, width = 4800,pointsize = 12, res = 300)
-plotTargetAnnotation(diffCpGann.hyper.cpg.tile,col=c("green","gray","white"),main="Hyper-DMR CpGi/shores annotation")
-dev.off()
 
 
 
