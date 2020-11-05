@@ -195,10 +195,27 @@ library(rtracklayer)
 # Methylation call at CpGs
 processBismarkAln(location=list("WT_bs_1-WT-bs-r1_S11_5-WT-bs-r2_S15_sorted.bam","WT_oxbs_2-WT-oxbs-r1_S12_6-WT-oxbs-r2_S16_sorted.bam","B_KO_bs_3-B-bs-r1_S13_7-B-bs-r2_S17_sorted.bam","B_KO_oxbs_4-B-oxbs-r1_S14_8-B-oxbs-r2_S10_sorted.bam"),sample.id= list("WT_bs","WT_oxbs","B_KO_bs","4B_KO_oxbs" ), assembly="hg38",save.folder = "methyl_call/", save.context = c("CpG"), read.context = "CpG",nolap = TRUE, mincov = 10, minqual = 20, phred64 = FALSE,treatment=c(1,1,0,0), save.db = TRUE)
 
+
+#remove CpG at chrY, chrUN in bash
+
 more WT_oxbs_CpG.txt | egrep -iv "chrY|chrUn*|*random" > WT_oxbs_CpG_mod.txt 
 more BKO_oxbs_CpG.txt | egrep -iv "chrY|chrUn*|*random" > BKO_oxbs_CpG_mod.txt
 
-# First of need to convert adjusted 5hmc into the methRead format
+## Extract true 5hmc by using adjustMethylC(): oxbs=true 5mc, bs=5hmc+5mc
+
+WT_bs_cpg_5mc_5hmc=methRead("WT_bs_CpG_mod.txt",sample.id = "WT_bs_cpg_5mc_5hmc",assembly = "hg38",context = "CpG", mincov = 0)
+WT_oxbs_cpg_5mc=methRead("WT_oxbs_CpG_mod.txt",sample.id = "WT_oxbs_cpg_5mc",assembly = "hg38",context = "CpG", mincov = 0)
+adjusted_true_5hmc=adjustMethylC(WT_bs_cpg_5mc_5hmc,WT_oxbs_cpg_5mc)
+write.table(adjusted_true_5hmc,"WT_adjusted_true_5hmC_cpg.txt",sep="\t")
+ 
+BKO_bs_cpg_5mc_5hmc=methRead("BKO_bs_CpG_mod.txt",sample.id = "BKO_bs_cpg_5mc_5hmc",assembly = "hg38",context = "CpG", mincov = 0)
+BKO_oxbs_cpg_5mc=methRead("BKO_oxbs_CpG_mod.txt",sample.id = "BKO_oxbs_cpg_5mc",assembly = "hg38",context = "CpG", mincov = 0)
+adjusted_true_5hmc_BKO=adjustMethylC(BKO_bs_cpg_5mc_5hmc,BKO_oxbs_cpg_5mc)
+write.table(adjusted_true_5hmc_BKO,"BKO_adjusted_true_5hmC_cpg.txt",sep="\t")
+ 
+
+
+# Need to convert adjusted 5hmc into the methRead format
 more Bko_adjusted_true_5hmC.txt | sed 's/\"//g' | grep -v ^chr| cut -f2,3,5-8|sed 's/\t/\./' |sed 's/\+/F/'|sed 's/\-/R/' |awk -v OFS="\t" '{print $1,$1,$2,$3,100*($4/$3),100*($5/$3)}'| sed 's/\./\t/2' > Bko_adjusted_true_5hmC_tmp.txt
 more WT_adjusted_true_5hmC.txt | sed 's/\"//g' | grep -v ^chr| cut -f2,3,5-8|sed 's/\t/\./' |sed 's/\+/F/'|sed 's/\-/R/' |awk -v OFS="\t" '{print $1,$1,$2,$3,100*($4/$3),100*($5/$3)}'| sed 's/\./\t/2' > WT_adjusted_true_5hmC_tmp.txt
 
